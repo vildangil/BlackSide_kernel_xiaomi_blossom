@@ -261,9 +261,11 @@ unsigned int m4u_get_pfh_tag(int m4u_id, int set, int page, int way)
 	return M4U_ReadReg32(m4u_base, REG_MMU_PFH_TAG_RDATA);
 }
 
-static unsigned int imu_pfh_tag_to_va(int mmu, int set, int way, unsigned int tag)
+static unsigned int
+imu_pfh_tag_to_va(int mmu, int set, int way, unsigned int tag)
 {
 	unsigned int va = F_PFH_TAG_VA_GET(mmu, tag);
+
 	if (tag & F_PFH_TAG_LAYER_BIT)
 		return va | (set << 15);
 
@@ -355,8 +357,8 @@ m4u_confirm_range_invalidated(int m4u_index,
 			}
 		}
 	}
-	return 0;
 
+	return 0;
 }
 
 int m4u_power_on(int m4u_index)
@@ -386,6 +388,7 @@ int larb_clock_on(int larb, bool config_mtcmos)
 	if (larb < ARRAY_SIZE(smi_clk_name))
 		smi_bus_prepare_enable(larb, smi_clk_name[larb]);
 #endif
+
 	return 0;
 }
 
@@ -395,6 +398,7 @@ int larb_clock_off(int larb, bool config_mtcmos)
 	if (larb < ARRAY_SIZE(smi_clk_name))
 		smi_bus_disable_unprepare(larb, smi_clk_name[larb]);
 #endif
+
 	return 0;
 }
 
@@ -416,7 +420,7 @@ int m4u_disable_prog_dist_by_id(int port, int id)
 	spin_lock(&gM4u_reg_lock);
 	m4uHw_set_field_by_mask(m4u_base, REG_MMU_PROG_DIST(id), F_PF_EN(1), 0);
 	spin_unlock(&gM4u_reg_lock);
-	
+
 	return 0;
 }
 
@@ -430,7 +434,6 @@ m4u_config_prog_dist(M4U_PORT_ID port, int dir,
 	unsigned int larb = m4u_port_2_larb_id(port);
 	unsigned int larb_port = m4u_port_2_larb_port(port);
 	struct m4u_prog_dist *pProgPfh = gM4UProgPfh[m4u_index];
-
 
 	if (unlikely(larb >= SMI_LARB_NR)) {
 		return -1;
@@ -488,7 +491,6 @@ m4u_config_prog_dist(M4U_PORT_ID port, int dir,
 	spin_unlock(&gM4u_reg_lock);
 
 	return free_id;
-
 }
 
 int m4u_invalid_prog_dist_by_id(int port)
@@ -518,7 +520,6 @@ int m4u_invalid_prog_dist_by_id(int port)
 	spin_unlock(&gM4u_reg_lock);
 
 	return 0;
-
 }
 
 int m4u_insert_seq_range(M4U_PORT_ID port,
@@ -559,15 +560,14 @@ int m4u_insert_seq_range(M4U_PORT_ID port,
 		return -1;
 	}
 	/* record range information in array */
-
 	pSeq[free_id].Enabled = 1;
 	pSeq[free_id].port = port;
 	pSeq[free_id].MVAStart = MVAStart;
 	pSeq[free_id].MVAEnd = MVAEnd;
 
-	/* set the range register */
-
 	mutex_unlock(&gM4u_seq_mutex);
+
+	/* set the range register */
 
 	MVAStart &= F_SQ_VA_MASK;
 	MVAStart |= F_SQ_EN_BIT;
@@ -647,6 +647,7 @@ static int _m4u_config_port(int port, int virt, int sec, int dis, int dir)
 	return 0;
 }
 
+/* native */
 int m4u_config_port(struct m4u_port_config_struct *pM4uPort)
 {
 	M4U_PORT_ID PortID = (pM4uPort->ePortID);
@@ -664,8 +665,11 @@ int m4u_config_port(struct m4u_port_config_struct *pM4uPort)
 		m4u_config_port_tee(pM4uPort);
 	else
 #endif
-		_m4u_config_port(PortID, pM4uPort->Virtuality, pM4uPort->Security, pM4uPort->Distance, pM4uPort->Direction);
-
+	{
+		_m4u_config_port(PortID, pM4uPort->Virtuality,
+				       pM4uPort->Security, pM4uPort->Distance,
+				       pM4uPort->Direction);
+	}
 
 	if (m4u_port_2_m4u_id(PortID) == 0)
 		larb_clock_off(larb, 1);
@@ -709,32 +713,44 @@ int m4u_config_port_array(struct m4u_port_array *port_array)
 		}
 	}
 
+	/* enable larb clock */
 	for (larb = 0; larb < SMI_LARB_NR; larb++)
-		if (config_larb[larb] != 0) larb_clock_on(larb, 1);
+		if (config_larb[larb] != 0)
+			larb_clock_on(larb, 1);
 
-		for (port = 0; port < gM4u_port_num; port++) {
-			if ((port_array->ports[port] && M4U_PORT_ATTR_EN) == 0) continue;
-			if (m4u_port_2_m4u_id(port) == 0) {
+	/* config port */
+	for (port = 0; port < gM4u_port_num; port++) {
+		if ((port_array->ports[port] && M4U_PORT_ATTR_EN) == 0)
+			continue;
 
-				larb = m4u_port_2_larb_id(port);
-				larb_port = m4u_port_2_larb_port(port);
+		if (m4u_port_2_m4u_id(port) == 0) {
+			larb = m4u_port_2_larb_id(port);
+			larb_port = m4u_port_2_larb_port(port);
 
-				if (likely(larb < SMI_LARB_NR)) {
-					unsigned int orig_value = m4uHw_get_field_by_mask(gLarbBaseAddr[larb], SMI_LARB_NON_SEC_CONx(larb_port), F_SMI_NON_SEC_MMU_EN(1));
-					if (orig_value != regNew[larb][larb_port]) {
-						spin_lock(&gM4u_reg_lock);
-						m4uHw_set_field_by_mask(gLarbBaseAddr[larb], SMI_LARB_NON_SEC_CONx(larb_port), F_SMI_MMU_EN, F_SMI_NON_SEC_MMU_EN(!!(regNew[larb][larb_port])));
-						spin_unlock(&gM4u_reg_lock);
-					}
+			if (likely(larb < SMI_LARB_NR)) {
+				unsigned int orig_value =
+					m4uHw_get_field_by_mask(gLarbBaseAddr[larb],
+						SMI_LARB_NON_SEC_CONx(larb_port),
+						F_SMI_NON_SEC_MMU_EN(1));
+				if (orig_value != regNew[larb][larb_port]) {
+					spin_lock(&gM4u_reg_lock);
+					m4uHw_set_field_by_mask(gLarbBaseAddr[larb],
+						SMI_LARB_NON_SEC_CONx(larb_port),
+						F_SMI_MMU_EN,
+						F_SMI_NON_SEC_MMU_EN(
+						!!(regNew[larb][larb_port])));
+					spin_unlock(&gM4u_reg_lock);
 				}
 			}
 		}
+	}
 
-		for (larb = 0; larb < SMI_LARB_NR; larb++)
-			if (config_larb[larb] != 0) larb_clock_off(larb, 1);
+	/* disable larb clock */
+	for (larb = 0; larb < SMI_LARB_NR; larb++)
+		if (config_larb[larb] != 0)
+			larb_clock_off(larb, 1);
 
-			return 0;
-
+	return 0;
 }
 
 int m4u_monitor_start(int m4u_id)
@@ -1212,7 +1228,7 @@ int m4u_hw_init(struct m4u_device *m4u_dev, int m4u_id)
 
 	if (m4u_id == 0) {
 		struct m4u_port_config_struct port;
-		port.Direction = 0;
+port.Direction = 0;
 		port.Distance = 1;
 		port.domain = 0;
 		port.Security = 0;
