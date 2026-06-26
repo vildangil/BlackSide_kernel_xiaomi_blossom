@@ -214,7 +214,7 @@ static struct display_primary_path_context g_context = {0};
 
 struct display_primary_path_context *_get_context(void)
 {
-#if 0
+#ifdef THR
 	static int is_context_inited;
 	static struct display_primary_path_context g_context;
 
@@ -4136,6 +4136,7 @@ static void _primary_protect_mode_switch(void)
 }
 
 static int request_lcm_refresh_rate_change(int fps);
+#ifdef CONFIG_MTK_DISPLAY_120HZ_SUPPORT
 int primary_display_set_lcm_refresh_rate(int fps)
 {
 	int ret = 0;
@@ -4175,6 +4176,7 @@ int primary_display_set_lcm_refresh_rate(int fps)
 	_primary_path_unlock(__func__);
 	return ret;
 }
+#endif
 
 int primary_display_get_lcm_refresh_rate(void)
 {
@@ -5928,6 +5930,7 @@ void add_round_corner_layers(
 		input_ext->dst_h = h_bot;
 	}
 }
+#endif
 
 static bool disp_rsz_frame_has_rsz_layer(struct disp_frame_cfg_t *cfg)
 {
