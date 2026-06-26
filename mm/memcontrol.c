@@ -262,9 +262,9 @@ struct vmpressure *memcg_to_vmpressure(struct mem_cgroup *memcg)
 	return &memcg->vmpressure;
 }
 
-struct mem_cgroup *vmpressure_to_memcg(struct vmpressure *vmpr)
+struct cgroup_subsys_state *vmpressure_to_css(struct vmpressure *vmpr)
 {
-	return container_of(vmpr, struct mem_cgroup, vmpressure);
+	return &container_of(vmpr, struct mem_cgroup, vmpressure)->css;
 }
 
 #ifdef CONFIG_MEMCG_KMEM
