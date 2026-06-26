@@ -901,6 +901,7 @@ int m4u_reg_restore(void)
 				__M4U_RESTORE(m4u_base,
 					REG_MMU_SQ_END(m4u_slave, seq),
 					*(pReg++));
+			}
 			for (mau = 0; mau < MAU_NR_PER_M4U_SLAVE; mau++) {
 				__M4U_RESTORE(m4u_base,
 					REG_MMU_MAU_START(m4u_slave, mau),
@@ -927,6 +928,7 @@ int m4u_reg_restore(void)
 			__M4U_RESTORE(m4u_base,
 				REG_MMU_MAU_VA(m4u_slave), *(pReg++));
 		}
+
 		m4uHw_set_field_by_mask(m4u_base,
 			REG_MMU_DUMMY, F_REG_MMU_IDLE_ENABLE, 0);
 	}
