@@ -395,6 +395,7 @@ static void _disp_primary_path_switch_dst_mode_work(struct work_struct *work)
 	} else {
 		schedule_delayed_work(to_delayed_work(work), msecs_to_jiffies(1000));
 	}
+}
 static DECLARE_DELAYED_WORK(primary_display_switch_dst_mode_work, _disp_primary_path_switch_dst_mode_work);
 #endif
 
