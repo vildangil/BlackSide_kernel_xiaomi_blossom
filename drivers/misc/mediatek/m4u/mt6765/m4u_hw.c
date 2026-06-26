@@ -205,7 +205,7 @@ int m4u_confirm_range_invalidated(int m4u_index, unsigned int MVAStart, unsigned
 	unsigned int regval, tag_s, tag_e, sa, ea, unit_sz;
 	unsigned long m4u_base = gM4UBaseAddr[m4u_index];
 	int set_nr = MMU_SET_NR(m4u_index);
-	int way, set, i;
+	int way, set;
 
 
 	if (m4u_confirm_main_range_invalidated(m4u_index, 0, MVAStart, MVAEnd) < 0) return -1;
