@@ -958,7 +958,7 @@ static inline struct userfaultfd_wait_queue *find_userfault_in(
 	wait_queue_entry_t *wq;
 	struct userfaultfd_wait_queue *uwq;
 
-	lockdep_assert_held(&wqh->lock);
+	VM_BUG_ON(!spin_is_locked(&wqh->lock));
 
 	uwq = NULL;
 	if (!waitqueue_active(wqh))
